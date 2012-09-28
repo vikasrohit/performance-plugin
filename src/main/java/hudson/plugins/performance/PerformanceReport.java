@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -120,6 +121,26 @@ public class PerformanceReport extends AbstractReport implements
       }
       Collections.sort(allSamples);
       result = allSamples.get((int) (allSamples.size() * .5)).getDuration();
+    }
+    return result;
+  }
+
+  public double getThrougput() {
+    double result = 0;
+    int size = size();
+    if (size != 0) {
+      List<HttpSample> allSamples = new ArrayList<HttpSample>();
+      for (UriReport currentReport : uriReportMap.values()) {
+        allSamples.addAll(currentReport.getHttpSampleList());
+      }
+      Collections.sort(allSamples, new Comparator<HttpSample>() {
+	
+		public int compare(HttpSample o1, HttpSample o2) {
+			return (int) (o1.getDate().getTime() - o2.getDate().getTime());
+		}
+      });
+      long time = allSamples.get(size -1).getDate().getTime() - allSamples.get(1).getDate().getTime();
+      result = (double)(size -1)*1000 / time;
     }
     return result;
   }

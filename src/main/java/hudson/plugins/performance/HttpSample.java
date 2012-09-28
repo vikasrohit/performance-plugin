@@ -29,6 +29,8 @@ public class HttpSample implements Comparable<HttpSample> {
   private float summarizerErrors;
 
   private long summarizerSamples;
+  
+  private long bytes;
     
 
   public long getDuration() {
@@ -104,7 +106,15 @@ public class HttpSample implements Comparable<HttpSample> {
     this.summarizerSamples = summarizerSamples;
   }
 
-   public void setSummarizerMin(long summarizerMin) {
+   public long getBytes() {
+	return bytes;
+}
+
+public void setBytes(long bytes) {
+	this.bytes = bytes;
+}
+
+public void setSummarizerMin(long summarizerMin) {
     this.summarizerMin = summarizerMin;
   }
 

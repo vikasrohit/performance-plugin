@@ -106,6 +106,14 @@ public class UriReport extends AbstractReport implements ModelObject,
     return result;
   }
 
+  public long getAverageBytesTransferred() {
+    long average = 0;
+    for (HttpSample currentSample : httpSampleList) {
+      average += currentSample.getBytes();
+    }
+    return average / size();
+  }
+
   public AbstractBuild<?, ?> getBuild() {
     return performanceReport.getBuild();
   }

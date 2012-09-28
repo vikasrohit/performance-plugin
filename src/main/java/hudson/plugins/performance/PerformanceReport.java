@@ -144,6 +144,20 @@ public class PerformanceReport extends AbstractReport implements
     }
     return result;
   }
+
+  public double getAverageBytesTransferred() {
+    long result = 0;
+    int size = size();
+    if (size != 0) {
+      long average = 0;
+      for (UriReport currentReport : uriReportMap.values()) {
+        average += currentReport.getAverageBytesTransferred() * currentReport.size();
+      }
+      double test = average / size;
+      result = (int) test;
+    }
+    return result;
+  }
       
   public String getHttpCode() {
     return "";

@@ -172,6 +172,57 @@ public final class PerformanceProjectAction implements Action {
     return chart;
   }
 
+  private JFreeChart createBytesTransferredChart(CategoryDataset dataset) {
+
+    final JFreeChart chart = ChartFactory.createLineChart(
+        Messages.ProjectAction_BytesTransferred(), // chart title
+        null, // unused
+        "KB", // range axis label
+        dataset, // data
+        PlotOrientation.VERTICAL, // orientation
+        true, // include legend
+        true, // tooltips
+        false // urls
+    );
+
+    // NOW DO SOME OPTIONAL CUSTOMISATION OF THE CHART...
+
+    final LegendTitle legend = chart.getLegend();
+    legend.setPosition(RectangleEdge.BOTTOM);
+
+    chart.setBackgroundPaint(Color.white);
+
+    final CategoryPlot plot = chart.getCategoryPlot();
+
+    // plot.setAxisOffset(new Spacer(Spacer.ABSOLUTE, 5.0, 5.0, 5.0, 5.0));
+    plot.setBackgroundPaint(Color.WHITE);
+    plot.setOutlinePaint(null);
+    plot.setRangeGridlinesVisible(true);
+    plot.setRangeGridlinePaint(Color.black);
+
+    CategoryAxis domainAxis = new ShiftedCategoryAxis(null);
+    plot.setDomainAxis(domainAxis);
+    domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_90);
+    domainAxis.setLowerMargin(0.0);
+    domainAxis.setUpperMargin(0.0);
+    domainAxis.setCategoryMargin(0.0);
+
+    final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+    rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+    rangeAxis.setAutoRange(true);
+    //rangeAxis.setUpperBound(100);
+    //rangeAxis.setLowerBound(0);
+
+    final LineAndShapeRenderer renderer = (LineAndShapeRenderer) plot.getRenderer();
+    renderer.setBaseStroke(new BasicStroke(4.0f));
+    ColorPalette.apply(renderer);
+
+    // crop extra space around the graph
+    plot.setInsets(new RectangleInsets(5.0, 0, 0, 5.0));
+
+    return chart;
+  }
+
   protected static JFreeChart createRespondingTimeChart(CategoryDataset dataset) {
 
     final JFreeChart chart = ChartFactory.createLineChart(
@@ -477,6 +528,54 @@ public final class PerformanceProjectAction implements Action {
         ChartUtil.generateGraph(request, response, createThroughputChart(dataSetBuilderAverage.build()), 400, 200);
   }
 
+    public void doBytesTransferredGraph(StaplerRequest request, StaplerResponse response) throws IOException {
+    	PerformanceReportPosition performanceReportPosition = new PerformanceReportPosition();
+        request.bindParameters(performanceReportPosition);
+        String performanceReportNameFile = performanceReportPosition.getPerformanceReportPosition();
+        if (performanceReportNameFile == null) {
+          if (getPerformanceReportList().size() == 1) {
+            performanceReportNameFile = getPerformanceReportList().get(0);
+          } else {
+            return;
+          }
+        }
+        if (ChartUtil.awtProblemCause != null) {
+          // not available. send out error message
+          response.sendRedirect2(request.getContextPath() + "/images/headless.png");
+          return;
+        }
+        DataSetBuilder<String, NumberOnlyBuildLabel> dataSetBuilderAverage = new DataSetBuilder<String, NumberOnlyBuildLabel>();
+        List<? extends AbstractBuild<?, ?>> builds = getProject().getBuilds();
+        Range buildsLimits = getFirstAndLastBuild(request, builds);
+
+        int nbBuildsToAnalyze = builds.size();
+        for (AbstractBuild<?, ?> build : builds) {
+          if (buildsLimits.in(nbBuildsToAnalyze)) {
+        	
+        	if (!buildsLimits.includedByStep(build.number)){
+          		continue;
+          	}  
+        	    
+            NumberOnlyBuildLabel label = new NumberOnlyBuildLabel(build);
+            PerformanceBuildAction performanceBuildAction = build.getAction(PerformanceBuildAction.class);
+            if (performanceBuildAction == null) {
+              continue;
+            }
+            PerformanceReport performanceReport = performanceBuildAction.getPerformanceReportMap().getPerformanceReport(
+                performanceReportNameFile);
+            if (performanceReport == null) {
+              nbBuildsToAnalyze--;
+              continue;
+            }
+            dataSetBuilderAverage.add(performanceReport.getAverageBytesTransferred()/1024.00,
+            		Messages.ProjectAction_BytesTransferred(), label);
+          }
+          nbBuildsToAnalyze--;
+          continue;
+        }
+        ChartUtil.generateGraph(request, response,
+        		createBytesTransferredChart(dataSetBuilderAverage.build()), 400, 200);
+  }
 
   public void doSummarizerGraph(StaplerRequest request,
                                 StaplerResponse response) throws IOException {

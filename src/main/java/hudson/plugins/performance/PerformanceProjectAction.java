@@ -25,6 +25,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.LineAndShapeRenderer;
@@ -157,7 +158,7 @@ public final class PerformanceProjectAction implements Action {
     domainAxis.setCategoryMargin(0.0);
 
     final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
-    rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+    rangeAxis.setStandardTickUnits(NumberAxis.createStandardTickUnits());
     rangeAxis.setAutoRange(true);
     //rangeAxis.setUpperBound(100);
     //rangeAxis.setLowerBound(0);
@@ -208,7 +209,7 @@ public final class PerformanceProjectAction implements Action {
     domainAxis.setCategoryMargin(0.0);
 
     final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
-    rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+    rangeAxis.setStandardTickUnits(NumberAxis.createStandardTickUnits());
     rangeAxis.setAutoRange(true);
     //rangeAxis.setUpperBound(100);
     //rangeAxis.setLowerBound(0);
@@ -569,6 +570,57 @@ public final class PerformanceProjectAction implements Action {
             }
             dataSetBuilderAverage.add(performanceReport.getAverageBytesTransferred()/1024.00,
             		Messages.ProjectAction_BytesTransferred(), label);
+          }
+          nbBuildsToAnalyze--;
+          continue;
+        }
+        ChartUtil.generateGraph(request, response,
+        		createBytesTransferredChart(dataSetBuilderAverage.build()), 400, 200);
+  }
+
+    public void doBytesTransferredGraphPerTestCase(StaplerRequest request, StaplerResponse response) throws IOException {
+    	PerformanceReportPosition performanceReportPosition = new PerformanceReportPosition();
+        request.bindParameters(performanceReportPosition);
+        String performanceReportNameFile = performanceReportPosition.getPerformanceReportPosition();
+        if (performanceReportNameFile == null) {
+          if (getPerformanceReportList().size() == 1) {
+            performanceReportNameFile = getPerformanceReportList().get(0);
+          } else {
+            return;
+          }
+        }
+        if (ChartUtil.awtProblemCause != null) {
+          // not available. send out error message
+          response.sendRedirect2(request.getContextPath() + "/images/headless.png");
+          return;
+        }
+        DataSetBuilder<String, NumberOnlyBuildLabel> dataSetBuilderAverage = new DataSetBuilder<String, NumberOnlyBuildLabel>();
+        List<? extends AbstractBuild<?, ?>> builds = getProject().getBuilds();
+        Range buildsLimits = getFirstAndLastBuild(request, builds);
+
+        int nbBuildsToAnalyze = builds.size();
+        for (AbstractBuild<?, ?> build : builds) {
+          if (buildsLimits.in(nbBuildsToAnalyze)) {
+        	
+        	if (!buildsLimits.includedByStep(build.number)){
+          		continue;
+          	}  
+        	    
+            NumberOnlyBuildLabel label = new NumberOnlyBuildLabel(build);
+            PerformanceBuildAction performanceBuildAction = build.getAction(PerformanceBuildAction.class);
+            if (performanceBuildAction == null) {
+              continue;
+            }
+            PerformanceReport performanceReport = performanceBuildAction.getPerformanceReportMap().getPerformanceReport(
+                performanceReportNameFile);
+            if (performanceReport == null) {
+              nbBuildsToAnalyze--;
+              continue;
+            }
+            for (UriReport uriReport : performanceReport.getUriReportMap().values()) {
+              dataSetBuilderAverage.add(uriReport.getAverageBytesTransferred()/1024.00,
+            		   uriReport.getUri(), label);
+            }
           }
           nbBuildsToAnalyze--;
           continue;

@@ -139,8 +139,15 @@ public class PerformanceReport extends AbstractReport implements
 			return (int) (o1.getDate().getTime() - o2.getDate().getTime());
 		}
       });
-      long time = allSamples.get(size -1).getDate().getTime() - allSamples.get(1).getDate().getTime();
-      result = (double)(size -1)*1000 / time;
+      if (size == 1) {
+    	  // only one request sent in duration of the single sample
+    	  result = (double)1*1000 / allSamples.get(0).getDuration();
+      } else if (size > 1) {
+        long time = allSamples.get(size -1).getDate().getTime() - allSamples.get(1).getDate().getTime();
+        result = (double)(size -1)*1000 / time;
+      } else {
+    	  result = 0;
+      }
     }
     return result;
   }

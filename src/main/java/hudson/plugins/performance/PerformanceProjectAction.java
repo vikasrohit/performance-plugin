@@ -299,6 +299,7 @@ public final class PerformanceProjectAction implements Action {
 
        final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
             rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+            rangeAxis.setAutoRange(true);
 
        final BarRenderer renderer = (BarRenderer) plot.getRenderer();
            renderer.setDrawBarOutline(false);
@@ -693,10 +694,10 @@ public final class PerformanceProjectAction implements Action {
 
       
       String summarizerReportType = performanceReportPosition.getSummarizerReportType();
-      if (summarizerReportType.equalsIgnoreCase("error")) {
+      if (summarizerReportType != null && summarizerReportType.equalsIgnoreCase("error")) {
         ChartUtil.generateGraph(request, response,
         createSummarizerChart(dataSetBuilderSummarizerErrors.build(),"%",Messages.ProjectAction_PercentageOfErrors()), 400, 200);
-      } else if(summarizerReportType.equalsIgnoreCase("throughput")) {
+      } else if(summarizerReportType != null && summarizerReportType.equalsIgnoreCase("throughput")) {
         ChartUtil.generateGraph(request, response,
         createSummarizerChart(dataSetBuilderSummarizerThroughput.build(),"\\s",Messages.ProjectAction_Throughput()), 400, 200);
       } else {

@@ -707,7 +707,7 @@ public final class PerformanceProjectAction implements Action {
         createSummarizerChart(dataSetBuilderSummarizerErrors.build(),"%",Messages.ProjectAction_PercentageOfErrors()), 400, 200);
       } else if(summarizerReportType != null && summarizerReportType.equalsIgnoreCase("throughput")) {
         ChartUtil.generateGraph(request, response,
-        createSummarizerChart(dataSetBuilderSummarizerThroughput.build(),"\\s",Messages.ProjectAction_Throughput(), Color.BLUE),
+        createSummarizerChart(dataSetBuilderSummarizerThroughput.build(),"requests/sec",Messages.ProjectAction_Throughput(), Color.BLUE),
         400, 200);
       } else {
         ChartUtil.generateGraph(request, response,

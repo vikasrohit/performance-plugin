@@ -647,8 +647,9 @@ public final class PerformanceProjectAction implements Action {
         //response.sendRedirect2(request.getContextPath() + "/images/headless.png");
         return;
       }
-      DataSetBuilder<NumberOnlyBuildLabel, String> dataSetBuilderSummarizer = new DataSetBuilder<NumberOnlyBuildLabel, String>();
-      DataSetBuilder<NumberOnlyBuildLabel, String> dataSetBuilderSummarizerErrors = new DataSetBuilder<NumberOnlyBuildLabel, String>();
+      DataSetBuilder<String, NumberOnlyBuildLabel> dataSetBuilderSummarizer = new DataSetBuilder<String, NumberOnlyBuildLabel>();
+      DataSetBuilder<String, NumberOnlyBuildLabel> dataSetBuilderSummarizerThroughput = new DataSetBuilder<String, NumberOnlyBuildLabel>();
+      DataSetBuilder<String, NumberOnlyBuildLabel> dataSetBuilderSummarizerErrors = new DataSetBuilder<String, NumberOnlyBuildLabel>();
       
       List<?> builds = getProject().getBuilds();
       Range buildsLimits = getFirstAndLastBuild(request, builds);
@@ -672,10 +673,18 @@ public final class PerformanceProjectAction implements Action {
           }
 
           for (String key:performanceReport.getUriReportMap().keySet()) {
-            Long methodAvg=performanceReport.getUriReportMap().get(key).getHttpSampleList().get(0).getDuration();
-            float methodErrors= performanceReport.getUriReportMap().get(key).getHttpSampleList().get(0).getSummarizerErrors();
-            dataSetBuilderSummarizer.add(methodAvg, label, key);
-            dataSetBuilderSummarizerErrors.add(methodErrors, label, key);
+            // UriReport.getAverage() or UriReport.getHttpSampleList().get(0).getDuration is same thing as there would
+            // be only one HttpSample when parsing Summarizer log
+            Long methodAvg = performanceReport.getUriReportMap().get(key).getAverage();
+            Long methodMin = performanceReport.getUriReportMap().get(key).getHttpSampleList().get(0).getSummarizerMin();
+            Long methodMax = performanceReport.getUriReportMap().get(key).getHttpSampleList().get(0).getSummarizerMax();
+            Double tp = performanceReport.getUriReportMap().get(key).getHttpSampleList().get(0).getThroughput();
+            float methodErrors= (float) performanceReport.getUriReportMap().get(key).getHttpSampleList().get(0).getSummarizerErrors();
+            dataSetBuilderSummarizer.add(methodAvg, "Avg", label);
+            dataSetBuilderSummarizer.add(methodMin, "Min", label);
+            dataSetBuilderSummarizer.add(methodMax, "Max", label);
+            dataSetBuilderSummarizerThroughput.add(tp, "Throughput", label);
+            dataSetBuilderSummarizerErrors.add(methodErrors, "%" + Messages.ProjectAction_Errors(), label);
           };
         }
 
@@ -684,11 +693,13 @@ public final class PerformanceProjectAction implements Action {
 
       
       String summarizerReportType = performanceReportPosition.getSummarizerReportType();
-      if (summarizerReportType != null) {
+      if (summarizerReportType.equalsIgnoreCase("error")) {
         ChartUtil.generateGraph(request, response,
         createSummarizerChart(dataSetBuilderSummarizerErrors.build(),"%",Messages.ProjectAction_PercentageOfErrors()), 400, 200);
-      }
-      else {
+      } else if(summarizerReportType.equalsIgnoreCase("throughput")) {
+        ChartUtil.generateGraph(request, response,
+        createSummarizerChart(dataSetBuilderSummarizerThroughput.build(),"\\s",Messages.ProjectAction_Throughput()), 400, 200);
+      } else {
         ChartUtil.generateGraph(request, response,
         createSummarizerChart(dataSetBuilderSummarizer.build(),"ms",Messages.ProjectAction_RespondingTime()), 400, 200);
       }

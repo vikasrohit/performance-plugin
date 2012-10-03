@@ -31,6 +31,8 @@ public class HttpSample implements Comparable<HttpSample> {
   private long summarizerSamples;
   
   private long bytes;
+  
+  private double throughput;
     
 
   public long getDuration() {
@@ -112,6 +114,14 @@ public class HttpSample implements Comparable<HttpSample> {
 
 public void setBytes(long bytes) {
 	this.bytes = bytes;
+}
+
+public double getThroughput() {
+	return throughput;
+}
+
+public void setThroughput(double throughput) {
+	this.throughput = throughput;
 }
 
 public void setSummarizerMin(long summarizerMin) {

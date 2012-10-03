@@ -9,6 +9,8 @@ import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -62,18 +64,32 @@ public class JmeterSummarizerParser extends PerformanceReportParser{
               line=s.nextLine().replaceAll("="," ");
 
              if (!line.contains ("+"))   {
+              logger.println("Summarizer Log: " + line);
               Scanner scanner= new Scanner(line);
               HttpSample sample = new HttpSample();
 
               //set Date   !!!! stub. not Ffrom log
               sample.setDate(new Date (Long.valueOf("1296876799179")));   
 
-              scanner.findInLine("jmeter.reporters.Summariser:");
-              key=scanner.next();
+              String match = scanner.findInLine("jmeter.reporters.Summariser:");
+              if (match == null) {
+            	  continue;
+              }
 
-              // set SamplesCount
-              scanner.findInLine(key);
-              sample.setSummarizerSamples(scanner.nextLong());
+              key = scanner.findInLine("Generate Summary Results");
+              // pattern to match "  80 in 17.5s  " which comes after "Generate Summary Results"
+           	  Pattern pattern = Pattern.compile("\\s*([0-9]*)\\s*in\\s*([0-9.]*)s\\s*");
+           	  // move to the pattern defined above
+           	  key = scanner.findInLine(pattern);
+           	  if (key != null) {
+           	    Matcher matcher = pattern.matcher(key);
+           	    if (matcher.find()) {
+                  // set SamplesCount
+                  sample.setSummarizerSamples(Long.valueOf(matcher.group(1)));
+                  // set through put
+                  sample.setThroughput(Double.valueOf(matcher.group(2)));
+           	    }
+           	  }
               // set response time
               scanner.findInLine("Avg:");
               sample.setDuration(scanner.nextLong());

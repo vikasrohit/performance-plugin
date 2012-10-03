@@ -273,7 +273,8 @@ public final class PerformanceProjectAction implements Action {
   }
 
 
-    protected static JFreeChart createSummarizerChart (CategoryDataset dataset, String yAxis, String chartTitle) {
+    protected static JFreeChart createSummarizerChart (CategoryDataset dataset, String yAxis, String chartTitle,
+    		Color firstSeriesColor) {
 
       final JFreeChart chart = ChartFactory.createBarChart(
           chartTitle, // chart title
@@ -298,17 +299,24 @@ public final class PerformanceProjectAction implements Action {
        domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_45);
 
        final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
-            rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-            rangeAxis.setAutoRange(true);
+       rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+       rangeAxis.setAutoRange(true);
 
        final BarRenderer renderer = (BarRenderer) plot.getRenderer();
-           renderer.setDrawBarOutline(false);
-           renderer.setBaseStroke(new BasicStroke(4.0f));
-           renderer.setItemMargin(0);
-           renderer.setMaximumBarWidth(0.05);
+       renderer.setDrawBarOutline(false);
+       renderer.setBaseStroke(new BasicStroke(4.0f));
+       renderer.setItemMargin(0);
+       renderer.setMaximumBarWidth(0.05);
+       if (firstSeriesColor != null) {
+         renderer.setSeriesPaint(0, firstSeriesColor);
+       }
 
         
       return chart;
+    }
+
+    protected static JFreeChart createSummarizerChart (CategoryDataset dataset, String yAxis, String chartTitle) {
+      return createSummarizerChart(dataset, yAxis, chartTitle, null);
     }
 
 
@@ -699,7 +707,8 @@ public final class PerformanceProjectAction implements Action {
         createSummarizerChart(dataSetBuilderSummarizerErrors.build(),"%",Messages.ProjectAction_PercentageOfErrors()), 400, 200);
       } else if(summarizerReportType != null && summarizerReportType.equalsIgnoreCase("throughput")) {
         ChartUtil.generateGraph(request, response,
-        createSummarizerChart(dataSetBuilderSummarizerThroughput.build(),"\\s",Messages.ProjectAction_Throughput()), 400, 200);
+        createSummarizerChart(dataSetBuilderSummarizerThroughput.build(),"\\s",Messages.ProjectAction_Throughput(), Color.BLUE),
+        400, 200);
       } else {
         ChartUtil.generateGraph(request, response,
         createSummarizerChart(dataSetBuilderSummarizer.build(),"ms",Messages.ProjectAction_RespondingTime()), 400, 200);

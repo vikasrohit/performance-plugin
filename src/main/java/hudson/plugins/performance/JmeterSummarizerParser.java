@@ -64,7 +64,6 @@ public class JmeterSummarizerParser extends PerformanceReportParser{
               line=s.nextLine().replaceAll("="," ");
 
              if (!line.contains ("+"))   {
-              logger.println("Summarizer Log: " + line);
               Scanner scanner= new Scanner(line);
               HttpSample sample = new HttpSample();
 
@@ -75,6 +74,7 @@ public class JmeterSummarizerParser extends PerformanceReportParser{
               if (match == null) {
             	  continue;
               }
+              logger.println("Summarizer Log: " + line);
 
               key = scanner.findInLine("Generate Summary Results");
               // pattern to match "  80 in 17.5s  " which comes after "Generate Summary Results"

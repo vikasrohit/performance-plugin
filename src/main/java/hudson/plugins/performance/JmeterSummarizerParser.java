@@ -85,9 +85,12 @@ public class JmeterSummarizerParser extends PerformanceReportParser{
            	    Matcher matcher = pattern.matcher(key);
            	    if (matcher.find()) {
                   // set SamplesCount
-                  sample.setSummarizerSamples(Long.valueOf(matcher.group(1)));
+                  long samples = Long.valueOf(matcher.group(1));
+                  sample.setSummarizerSamples(samples);
                   // set through put
-                  sample.setThroughput(Double.valueOf(matcher.group(2)));
+                  double totalTime = Double.valueOf(matcher.group(2));
+                  double tp = totalTime != 0 ? samples/totalTime : 0;
+                  sample.setThroughput(tp);
            	    }
            	  }
               // set response time
